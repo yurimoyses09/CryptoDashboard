@@ -1,0 +1,30 @@
+﻿namespace CryptoDashboard.Collectors.CoinGenko
+{
+    public record CoinMarket(
+        string Id,
+        string Symbol,
+        string Name,
+        string? Image,
+        decimal CurrentPrice,
+        decimal? MarketCap,
+        int? MarketCapRank,
+        decimal? FullyDilutedValuation,
+        decimal? TotalVolume,
+        decimal? High24h,
+        decimal? Low24h,
+        decimal? PriceChange24h,
+        decimal? PriceChangePercentage24h,
+        decimal? MarketCapChange24h,
+        decimal? MarketCapChangePercentage24h,
+        decimal? CirculatingSupply,
+        decimal? TotalSupply,
+        decimal? MaxSupply,
+        decimal? Ath,
+        decimal? AthChangePercentage,
+        DateTimeOffset? AthDate,
+        decimal? Atl,
+        decimal? AtlChangePercentage,
+        DateTimeOffset? AtlDate,
+        Roi? Roi,
+        DateTimeOffset? LastUpdated);
+}

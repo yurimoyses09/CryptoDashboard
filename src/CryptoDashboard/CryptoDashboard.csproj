@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk.Web">
+
+  <PropertyGroup>
+    <TargetFramework>net10.0</TargetFramework>
+    <Nullable>enable</Nullable>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <BlazorDisableThrowNavigationException>true</BlazorDisableThrowNavigationException>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <Folder Include="Collectors\" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\CryptoDashboard.Collectors\CryptoDashboard.Collectors.csproj" />
+    <ProjectReference Include="..\CryptoDashboard.Data\CryptoDashboard.Data.csproj" />
+    <ProjectReference Include="..\CryptoDashboard.Infra\CryptoDashboard.Infra.csproj" />
+    <ProjectReference Include="..\CryptoDashboard.Services\CryptoDashboard.Services.csproj" />
+  </ItemGroup>
+
+</Project>

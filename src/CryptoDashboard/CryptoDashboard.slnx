@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="../CryptoDashboard.Collectors/CryptoDashboard.Collectors.csproj" />
+  <Project Path="../CryptoDashboard.Data/CryptoDashboard.Data.csproj" />
+  <Project Path="../CryptoDashboard.Infra/CryptoDashboard.Infra.csproj" />
+  <Project Path="../CryptoDashboard.Services/CryptoDashboard.Services.csproj" />
+  <Project Path="CryptoDashboard.csproj" />
+</Solution>
