@@ -1,5 +1,9 @@
-﻿using CryptoDashboard.Infra;
-using Microsoft.Extensions.Options;
+﻿using CryptoDashboard.Collectors;
+using CryptoDashboard.Data;
+using CryptoDashboard.Data.Repositories;
+using CryptoDashboard.Infra;
+using Microsoft.EntityFrameworkCore;
+using Polly;
 
 namespace CryptoDashboard
 {
@@ -7,24 +11,51 @@ namespace CryptoDashboard
     {
         public static IServiceCollection AddInfra(this IServiceCollection services, IConfiguration configuration)
         {
-            // Vincula a raiz do JSON diretamente à classe CoinSettings 
-            // (pois Coins e CoinGeckoApi estão no primeiro nível do appsettings.json)
             services.Configure<CoinSettings>(configuration);
 
-            // Registra o HttpClient nomeado utilizando a URL do appsettings
-            services.AddHttpClient("CoinGeckoClient", (serviceProvider, client) =>
+            services.AddDbContext<AppDbContext>(options =>
+                options.UseSqlite(configuration.GetConnectionString("Default")));
+
+            services.AddScoped<NewsRepository>();
+
+            services.AddHttpClient<IPriceCollector, CoinGeckoPriceCollector>(client =>
             {
-                var settings = serviceProvider.GetRequiredService<IOptions<CoinSettings>>().Value;
-
-                if (string.IsNullOrEmpty(settings.CoinGeckoApi?.BaseUrl))
-                {
-                    throw new InvalidOperationException("A BaseUrl do CoinGecko não foi configurada corretamente.");
-                }
-
-                client.BaseAddress = new Uri(settings.CoinGeckoApi.BaseUrl);
+                client.BaseAddress = new Uri("https://api.coingecko.com/api/v3/");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("CryptoDashboard/1.0");
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.MaxRetryAttempts = 3;
+                options.Retry.Delay = TimeSpan.FromSeconds(2);
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(30);
             });
 
+            services.AddHttpClient<INewsCollector, CointelegraphNewsCollector>(client =>
+            {
+                client.BaseAddress = new Uri("https://cointelegraph.com/");
+                client.DefaultRequestHeaders.UserAgent.ParseAdd("CryptoDashboard/1.0");
+            })
+            .AddStandardResilienceHandler(options =>
+            {
+                options.Retry.MaxRetryAttempts = 2;
+                options.Retry.Delay = TimeSpan.FromSeconds(2);
+                options.Retry.BackoffType = DelayBackoffType.Exponential;
+                options.TotalRequestTimeout.Timeout = TimeSpan.FromSeconds(20);
+            });
+
+            services.AddHostedService<CollectorWorker>();
+
             return services;
+        }
+
+        public static void InitializeDatabase(this WebApplication app)
+        {
+            using var scope = app.Services.CreateScope();
+            var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
+
+            db.Database.Migrate();
+            db.Database.ExecuteSqlRaw("PRAGMA journal_mode=WAL;");
         }
     }
 }

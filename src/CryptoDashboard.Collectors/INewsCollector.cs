@@ -1,10 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CryptoDashboard.Data.Models;
 
 namespace CryptoDashboard.Collectors
 {
-    internal class INewsCollector
+    public interface INewsCollector
     {
+        string SourceName { get; }
+
+        Task<IReadOnlyList<NewsItem>> CollectAsync(IEnumerable<string> coinIds, CancellationToken ct = default);
     }
 }

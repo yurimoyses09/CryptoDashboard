@@ -1,10 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
+﻿using CryptoDashboard.Data.Models;
 
 namespace CryptoDashboard.Collectors
 {
-    internal class IPriceCollector
+    public interface IPriceCollector
     {
+        Task<IReadOnlyList<PricePoint>> CollectAsync(IEnumerable<string> coinIds, CancellationToken ct = default);
     }
 }
