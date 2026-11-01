@@ -24,7 +24,7 @@ namespace CryptoDashboard.Collectors
             foreach (var item in feed.Items)
             {
                 var title = item.Title?.Text?.Trim();
-                var link = item.Links.FirstOrDefault()?.Uri?.ToString();
+                var link = CleanUrl(item.Links.FirstOrDefault()?.Uri);
 
                 if (string.IsNullOrWhiteSpace(title) || string.IsNullOrWhiteSpace(link))
                     continue;
@@ -39,6 +39,22 @@ namespace CryptoDashboard.Collectors
             }
 
             return items;
+        }
+
+        // Remove utm_* e outros parâmetros: o mesmo artigo vem com parâmetros
+        // diferentes em cada tag, e isso impedia a deduplicação pela URL.
+        private static string? CleanUrl(Uri? uri)
+        {
+            if (uri is null)
+                return null;
+
+            var builder = new UriBuilder(uri)
+            {
+                Query = string.Empty,
+                Fragment = string.Empty
+            };
+
+            return builder.Uri.ToString();
         }
 
         private static string CleanSummary(string? html)
