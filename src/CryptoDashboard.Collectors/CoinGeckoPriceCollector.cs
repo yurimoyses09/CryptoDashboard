@@ -1,5 +1,4 @@
 ﻿using CryptoDashboard.Collectors.CoinGenko;
-using CryptoDashboard.Data.Models;
 using System.Net.Http.Json;
 using System.Text.Json;
 
@@ -19,7 +18,7 @@ namespace CryptoDashboard.Collectors
             _http = http;
         }
 
-        public async Task<IReadOnlyList<PricePoint>> CollectAsync(IEnumerable<string> coinIds, CancellationToken ct = default)
+        public async Task<IReadOnlyList<CoinQuote>> CollectAsync(IEnumerable<string> coinIds, CancellationToken ct = default)
         {
             var ids = coinIds.ToList();
             if (ids.Count == 0)
@@ -31,16 +30,14 @@ namespace CryptoDashboard.Collectors
             var markets = await _http.GetFromJsonAsync<List<CoinMarket>>(url, JsonOptions, ct)
                 ?? [];
 
-            // Mesmo instante para todas as moedas desta coleta
-            var collectedAt = DateTimeOffset.UtcNow;
-
             return markets
-                .Select(m => new PricePoint(
+                .Select(m => new CoinQuote(
                     m.Id,
+                    m.Symbol,
+                    m.Name,
                     m.CurrentPrice,
                     m.MarketCap,
-                    m.PriceChangePercentage24h,
-                    collectedAt))
+                    m.PriceChangePercentage24h))
                 .ToList();
         }
     }

@@ -13,6 +13,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\CryptoDashboard.Data\CryptoDashboard.Data.csproj" />
+    <ProjectReference Include="..\CryptoDashboard.Infra\CryptoDashboard.Infra.csproj" />
   </ItemGroup>
 
 </Project>
