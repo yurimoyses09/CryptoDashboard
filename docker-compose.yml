@@ -12,6 +12,8 @@ services:
       - Sentiment__Ollama__Model=${OLLAMA_MODEL:-llama3.2}
       - Sentiment__Bedrock__ModelId=${BEDROCK_MODEL_ID:-}
       - Sentiment__Bedrock__Region=${BEDROCK_REGION:-us-east-1}
+      # Chave de API do Bedrock: vem do arquivo .env (que não vai para o Git)
+      - AWS_BEARER_TOKEN_BEDROCK=${AWS_BEARER_TOKEN_BEDROCK:-}
     volumes:
       - cryptodata:/data
       # Credenciais da AWS para o Bedrock, somente leitura (só é usado com SENTIMENT_PROVIDER=Bedrock)
