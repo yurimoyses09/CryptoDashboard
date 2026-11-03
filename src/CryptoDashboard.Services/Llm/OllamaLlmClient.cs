@@ -34,7 +34,17 @@ namespace CryptoDashboard.Services.Llm
                 ]);
 
             using var response = await _http.PostAsJsonAsync("api/chat", body, JsonOptions, ct);
-            response.EnsureSuccessStatusCode();
+
+            if (!response.IsSuccessStatusCode)
+            {
+                // O Ollama devolve o motivo no corpo (ex.: "model 'llama3.2' not found")
+                var detail = await response.Content.ReadAsStringAsync(ct);
+                throw new HttpRequestException(
+                    $"Ollama respondeu {(int)response.StatusCode}: {detail}. " +
+                    $"Verifique se o modelo '{_settings.Ollama.Model}' foi baixado com 'ollama pull'.",
+                    null,
+                    response.StatusCode);
+            }
 
             var payload = await response.Content.ReadFromJsonAsync<OllamaChatResponse>(JsonOptions, ct);
             return payload?.Message?.Content ?? string.Empty;
