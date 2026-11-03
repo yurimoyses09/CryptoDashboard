@@ -1,5 +1,6 @@
 using CryptoDashboard;
 using CryptoDashboard.Components;
+using CryptoDashboard.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -7,6 +8,7 @@ builder.Services.AddRazorComponents()
     .AddInteractiveServerComponents();
 
 builder.Services.AddInfra(builder.Configuration);
+builder.Services.AddSentiment(builder.Configuration);
 
 var app = builder.Build();
 

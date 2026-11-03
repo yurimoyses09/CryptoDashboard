@@ -6,9 +6,28 @@ services:
     environment:
       - ASPNETCORE_ENVIRONMENT=Development
       - "ConnectionStrings__Default=Data Source=/data/crypto.db"
+      # Provedor de sentimento: Ollama (padrão, local) ou Bedrock (AWS)
+      - Sentiment__Provider=${SENTIMENT_PROVIDER:-Ollama}
+      - Sentiment__Ollama__BaseUrl=http://ollama:11434
+      - Sentiment__Ollama__Model=${OLLAMA_MODEL:-llama3.2}
+      - Sentiment__Bedrock__ModelId=${BEDROCK_MODEL_ID:-}
+      - Sentiment__Bedrock__Region=${BEDROCK_REGION:-us-east-1}
     volumes:
       - cryptodata:/data
+      # Credenciais da AWS para o Bedrock, somente leitura (só é usado com SENTIMENT_PROVIDER=Bedrock)
+      - ${USERPROFILE:-~}/.aws:/home/app/.aws:ro
+    depends_on:
+      - ollama
+    restart: unless-stopped
+
+  ollama:
+    image: ollama/ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollamamodels:/root/.ollama
     restart: unless-stopped
 
 volumes:
   cryptodata:
+  ollamamodels:
