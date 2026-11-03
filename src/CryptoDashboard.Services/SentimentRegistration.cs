@@ -33,8 +33,8 @@ namespace CryptoDashboard.Services
                     {
                         // BaseAddress precisa terminar com "/" para o caminho "api/chat" ser montado corretamente
                         client.BaseAddress = new Uri(settings.Ollama.BaseUrl.TrimEnd('/') + "/");
-                        // Modelo local em CPU pode levar dezenas de segundos por notícia
-                        client.Timeout = TimeSpan.FromMinutes(2);
+                        // Modelo local em CPU pode ser lento. Configurável em Sentiment:Ollama:TimeoutMinutes
+                        client.Timeout = TimeSpan.FromMinutes(settings.Ollama.TimeoutMinutes);
                     });
                     services.AddScoped<ILlmClient>(sp => sp.GetRequiredService<OllamaLlmClient>());
                     break;

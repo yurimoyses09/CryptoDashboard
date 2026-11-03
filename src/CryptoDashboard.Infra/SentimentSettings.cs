@@ -23,5 +23,8 @@ namespace CryptoDashboard.Infra
     {
         public string BaseUrl { get; set; } = "http://localhost:11434";
         public string Model { get; set; } = "llama3.2";
+
+        // Tempo máximo para uma única resposta do modelo. Modelos em CPU podem ser lentos.
+        public int TimeoutMinutes { get; set; } = 10;
     }
 }

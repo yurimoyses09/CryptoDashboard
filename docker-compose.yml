@@ -10,6 +10,7 @@ services:
       - Sentiment__Provider=${SENTIMENT_PROVIDER:-Ollama}
       - Sentiment__Ollama__BaseUrl=http://ollama:11434
       - Sentiment__Ollama__Model=${OLLAMA_MODEL:-llama3.2}
+      - Sentiment__Ollama__TimeoutMinutes=${OLLAMA_TIMEOUT_MINUTES:-10}
       - Sentiment__Bedrock__ModelId=${BEDROCK_MODEL_ID:-}
       - Sentiment__Bedrock__Region=${BEDROCK_REGION:-us-east-1}
       # Chave de API do Bedrock: vem do arquivo .env (que não vai para o Git)
