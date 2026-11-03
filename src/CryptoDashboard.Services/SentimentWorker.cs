@@ -66,7 +66,8 @@ namespace CryptoDashboard.Services
 
             var pending = await db.NewsItems
                 .Where(n => n.Sentiment == null)
-                .OrderByDescending(n => n.PublishedAt)
+                // SQLite não ordena DateTimeOffset no banco. Id crescente segue a ordem de inserção.
+                .OrderByDescending(n => n.Id)
                 .Take(_sentiment.Value.BatchSize)
                 .ToListAsync(ct);
 
