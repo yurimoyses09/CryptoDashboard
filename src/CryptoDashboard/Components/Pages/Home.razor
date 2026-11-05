@@ -5,9 +5,27 @@
 
 <PageTitle>Dashboard</PageTitle>
 
-<div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-3">
-    <h1 class="h3 mb-0">Dashboard de criptomoedas</h1>
-    <button class="btn btn-outline-primary btn-sm" @onclick="LoadAsync" disabled="@_loading">Atualizar</button>
+<div class="d-flex justify-content-end mb-3">
+    <button class="btn btn-outline-primary btn-sm" @onclick="LoadAsync" disabled="@_loading">
+        @(_loading ? "Atualizando..." : "Atualizar")
+    </button>
+</div>
+
+<div class="row row-cards mb-4">
+    @foreach (var k in _coins.Take(4))
+    {
+        <div class="col-sm-6 col-lg-3">
+            <div class="card">
+                <div class="card-body">
+                    <div class="subheader">@k.Name · @k.Symbol.ToUpperInvariant()</div>
+                    <div class="h2 mb-1">@(k.Price is null ? "—" : "US$ " + Format.Price(k.Price))</div>
+                    <div class="@Format.VariationClass(k.Variation24h)">
+                        @Format.Pct(k.Variation24h) <span class="text-muted small">24h</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 <DailySummaryCard Items="_summary" Coins="_coins" />

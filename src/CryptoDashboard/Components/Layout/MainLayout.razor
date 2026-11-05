@@ -1,19 +1,40 @@
 ﻿@inherits LayoutComponentBase
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    <aside class="navbar navbar-vertical navbar-expand-lg">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="">CryptoDashboard</a>
+            <NavMenu />
+        </div>
+    </aside>
 
-    <main>
-        <div class="top-row px-4">
-            <a href="https://learn.microsoft.com/aspnet/core/" target="_blank">About</a>
+    <div class="page-wrapper">
+        <header class="page-header d-print-none">
+            <div class="container-xl">
+                <div class="row g-2 align-items-center">
+                    <div class="col">
+                        <div class="page-pretitle">Monitoramento</div>
+                        <h1 class="page-title">Criptomoedas e notícias</h1>
+                    </div>
+                    <div class="col-auto">
+                        <ThemeToggle />
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="page-body">
+            <div class="container-xl">
+                @Body
+            </div>
         </div>
 
-        <article class="content px-4">
-            @Body
-        </article>
-    </main>
+        <footer class="footer d-print-none">
+            <div class="container-xl small text-muted">
+                Preços: CoinGecko · Notícias: Cointelegraph · Sentimento: classificação por IA
+            </div>
+        </footer>
+    </div>
 </div>
 
 <div id="blazor-error-ui" data-nosnippet>

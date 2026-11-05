@@ -1,0 +1,29 @@
+@inject IJSRuntime JS
+
+<button type="button" class="btn btn-outline-secondary btn-sm" @onclick="ToggleAsync"
+        aria-label="Alternar entre tema claro e escuro">
+    @(_dark ? "Modo claro" : "Modo escuro")
+</button>
+
+@code {
+    private bool _dark;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (!firstRender) return;
+
+        // Lê o tema que o theme.js já aplicou, para o rótulo do botão bater com a tela
+        var theme = await JS.InvokeAsync<string>("cdTheme.current");
+        if ((theme == "dark") != _dark)
+        {
+            _dark = theme == "dark";
+            StateHasChanged();
+        }
+    }
+
+    private async Task ToggleAsync()
+    {
+        var theme = await JS.InvokeAsync<string>("cdTheme.toggle");
+        _dark = theme == "dark";
+    }
+}

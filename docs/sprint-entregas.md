@@ -9,9 +9,6 @@
 ## Dia 1: Fundação e infraestrutura básica
 
 - [x] Repositório GitHub e solução com projetos separados (`Collectors`, `Data`, `Infra`, `Services`, web)
-- [ ] AWS Budget com alertas de US$ 5 e US$ 10
-- [ ] Acesso ao modelo no Amazon Bedrock
-- [ ] Role IAM com `bedrock:InvokeModel`
 - [x] Lista de moedas e limite em `appsettings.json` (10 moedas, IDs da CoinGecko)
 - [x] Busca de preços em lote na CoinGecko (uma chamada para todas as moedas)
 - [x] Estrutura de pastas definida
@@ -39,43 +36,37 @@
 
 ## Dia 3: Feature de IA (sentimento, moedas citadas e resumo)
 
-- [x] `SentimentService` com provedores Ollama (local) e Bedrock (Converse API), atrás de `ILlmClient`
+- [x] `SentimentService` com provedor Ollama (local), atrás de `ILlmClient`
 - [x] Prompt com saída em JSON (sentimento, score, moedas citadas, temas)
 - [x] Passar a lista de moedas válidas ao modelo
 - [~] Tratar ambiguidade de símbolos (SOL, ADA): regra no prompt, falta validar com notícias reais
 - [x] Validar o JSON e registrar fallback (resposta inválida fica pendente e é tentada no próximo ciclo)
 - [x] Classificar notícias pendentes em lotes pequenos (`BatchSize`, a cada 30 min)
 - [x] Resumo diário das moedas mais citadas (`DailySummaryService`, últimas 24h, registrado no log a cada ciclo; compilação pendente de validação local)
-- [~] Limitar tokens de entrada e saída: Bedrock com `MaxTokens 300`; Ollama sem limite de saída (`num_predict`)
+- [~] Limitar tokens de saída do Ollama (`num_predict`): ainda sem limite
 - [x] Preencher `NewsCoins` com as moedas citadas em cada notícia
 - [~] Amostra revisada à mão: modelo em `docs/revisao-sentimento.md`, aguardando preenchimento (meta: 15 notícias, 80% OK)
-- [ ] Validar o provedor Bedrock de ponta a ponta (bloqueado pela verificação da conta na AWS)
 
 ---
 
-## Dia 4: Dashboard e deploy na EC2
+## Dia 4: Dashboard
 
 - [x] Tabela de moedas (preço, variação 24h, capitalização, sentimento) — código pronto, validação visual pendente
 - [x] Seletor de moedas e gráfico comparativo (SVG, variação % desde o início do período, 24h e 7 dias) — código pronto, validação visual pendente
 - [x] Lista de notícias com sentimento e filtro por moeda — código pronto, validação visual pendente
 - [x] Bloco com o resumo do dia — código pronto, validação visual pendente
-- [ ] Subir instância EC2 com Amazon Linux 2023
-- [ ] Security Group, IAM Role e Elastic IP
-- [ ] Publicar o app (ou o container) e configurar `systemd` ou Docker com reinício automático
-- [ ] Nginx como reverse proxy
 
 ---
 
 ## Dia 5: Hardening, observabilidade e documentação
 
-- [ ] Logs e reinício automático do serviço
-- [ ] Alarmes de CPU e status check
-- [ ] Revisão de permissões da IAM Role
-- [ ] Atualização do SO e acesso SSH restrito
-- [ ] Script de deploy
-- [ ] README completo (arquitetura, como rodar, custo, lista de moedas, atribuição)
+- [x] Logs em JSON no stdout, com rotação pelo Docker, e reinício automático (`restart: unless-stopped`) — código pronto
+- [x] Endpoint `/health` — código pronto
+- [x] README completo (arquitetura, como rodar, configuração, observabilidade, limitações, atribuição)
 - [ ] Vídeo ou prints do dashboard
-- [ ] Seção "Decisões e trade-offs"
+- [x] Seção "Decisões e trade-offs" no README
+
+**Hardening aplicado no código:** portas 8080 e 11434 só locais; Ollama sem porta publicada; ambiente de produção; `UseHttpsRedirection` removido (quebraria o acesso HTTP atrás do Nginx); encaminhamento de cabeçalhos do proxy habilitado; configuração do Bedrock removida da execução com Docker.
 
 ---
 
@@ -90,7 +81,7 @@
 | Docker | Não estava no plano | Dockerfile, `.dockerignore` e `docker-compose.yml` | Testar sem instalar banco local; SQLite fica em volume |
 | Migração do banco | Manual | Aplicada na inicialização (`Migrate()`) | Simplificar os testes |
 | Edição do Cointelegraph | Não definida | Inglês | Decisão do time |
-| Hospedagem | Lambda ou EC2 | EC2 | O worker é um processo contínuo |
+| Hospedagem | Lambda ou outra nuvem | Docker local, sem deploy em nuvem | Decisão do autor: o projeto fica como estudo local |
 
 ---
 
@@ -113,9 +104,8 @@
 2. Confirmar os termos de uso da CoinGecko e do Cointelegraph e registrar a atribuição no README.
 3. Preencher a amostra de revisão em `docs/revisao-sentimento.md` (15 notícias) e validar a classificação.
 4. Validar a compilação e a execução do `DailySummaryService` localmente (`dotnet build`), pois o código foi escrito sem compilar.
-5. Configurar o acesso ao Bedrock e a role IAM após a verificação da conta na AWS.
-6. Revogar a chave de demo da CoinGecko que estava hardcoded no `DailySummaryService`. Ela continua no histórico do Git, então deve ser tratada como exposta.
-7. Monitorar nos logs se alguma outra tag de moeda retorna 404.
+5. Revogar a chave de demo da CoinGecko que estava hardcoded no `DailySummaryService`. Ela continua no histórico do Git, então deve ser tratada como exposta.
+6. Monitorar nos logs se alguma outra tag de moeda retorna 404.
 
 ---
 
@@ -125,5 +115,4 @@
 |---|---|---|
 | Feed do Cointelegraph sair do ar ou mudar de formato | Sem outra fonte ativa | Reativar o feed do CoinDesk, que ainda responde |
 | Tag de moeda inexistente no Cointelegraph | BNB resolvido com `NewsTags` | Adicionar outro mapeamento na configuração |
-| Custo do Bedrock crescer com o volume de notícias | Ainda não medido | Reduzir a frequência e o tamanho do lote |
 | Ambiguidade de símbolos gera menções falsas | Previsto para o Dia 3 | Filtrar por nome completo e revisar uma amostra |
