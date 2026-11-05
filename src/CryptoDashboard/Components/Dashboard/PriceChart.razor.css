@@ -1,0 +1,17 @@
+.chart-label {
+    font-size: 12px;
+    fill: #6c757d;
+}
+
+.chart-zero {
+    stroke: #adb5bd;
+    stroke-dasharray: 4 4;
+}
+
+.legend-dot {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border-radius: 2px;
+    margin-right: 4px;
+}

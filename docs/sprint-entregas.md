@@ -55,10 +55,10 @@
 
 ## Dia 4: Dashboard e deploy na EC2
 
-- [ ] Tabela de moedas (preço, variação 24h, capitalização, sentimento)
-- [ ] Seletor de moedas e gráfico comparativo
-- [ ] Lista de notícias com sentimento e filtro por moeda
-- [ ] Bloco com o resumo do dia
+- [x] Tabela de moedas (preço, variação 24h, capitalização, sentimento) — código pronto, validação visual pendente
+- [x] Seletor de moedas e gráfico comparativo (SVG, variação % desde o início do período, 24h e 7 dias) — código pronto, validação visual pendente
+- [x] Lista de notícias com sentimento e filtro por moeda — código pronto, validação visual pendente
+- [x] Bloco com o resumo do dia — código pronto, validação visual pendente
 - [ ] Subir instância EC2 com Amazon Linux 2023
 - [ ] Security Group, IAM Role e Elastic IP
 - [ ] Publicar o app (ou o container) e configurar `systemd` ou Docker com reinício automático

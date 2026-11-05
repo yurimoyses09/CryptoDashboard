@@ -9,6 +9,7 @@ builder.Services.AddRazorComponents()
 
 builder.Services.AddInfra(builder.Configuration);
 builder.Services.AddSentiment(builder.Configuration);
+builder.Services.AddScoped<DashboardQueries>();
 
 var app = builder.Build();
 
