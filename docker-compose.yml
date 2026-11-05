@@ -1,35 +1,40 @@
 services:
   app:
     build: .
+    # Só o próprio servidor acessa a porta. O acesso público passa pelo Nginx (deploy/nginx/).
     ports:
-      - "8080:8080"
+      - "127.0.0.1:8080:8080"
     environment:
-      - ASPNETCORE_ENVIRONMENT=Development
+      - ASPNETCORE_ENVIRONMENT=Production
+      # Confia em X-Forwarded-For e X-Forwarded-Proto enviados pelo Nginx
+      - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - "ConnectionStrings__Default=Data Source=/data/crypto.db"
-      # Provedor de sentimento: Ollama (padrão, local) ou Bedrock (AWS)
-      - Sentiment__Provider=${SENTIMENT_PROVIDER:-Ollama}
+      - Sentiment__Provider=Ollama
       - Sentiment__Ollama__BaseUrl=http://ollama:11434
       - Sentiment__Ollama__Model=${OLLAMA_MODEL:-llama3.2}
       - Sentiment__Ollama__TimeoutMinutes=${OLLAMA_TIMEOUT_MINUTES:-10}
-      - Sentiment__Bedrock__ModelId=${BEDROCK_MODEL_ID:-}
-      - Sentiment__Bedrock__Region=${BEDROCK_REGION:-us-east-1}
-      # Chave de API do Bedrock: vem do arquivo .env (que não vai para o Git)
-      - AWS_BEARER_TOKEN_BEDROCK=${AWS_BEARER_TOKEN_BEDROCK:-}
     volumes:
       - cryptodata:/data
-      # Credenciais da AWS para o Bedrock, somente leitura (só é usado com SENTIMENT_PROVIDER=Bedrock)
-      - ${USERPROFILE:-~}/.aws:/home/app/.aws:ro
     depends_on:
       - ollama
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "5"
 
   ollama:
     image: ollama/ollama
-    ports:
-      - "11434:11434"
+    # Sem "ports": o Ollama fica acessível só pela rede interna do Compose
     volumes:
       - ollamamodels:/root/.ollama
     restart: unless-stopped
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
 volumes:
   cryptodata:

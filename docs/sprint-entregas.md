@@ -68,14 +68,17 @@
 
 ## Dia 5: Hardening, observabilidade e documentação
 
-- [ ] Logs e reinício automático do serviço
-- [ ] Alarmes de CPU e status check
-- [ ] Revisão de permissões da IAM Role
-- [ ] Atualização do SO e acesso SSH restrito
-- [ ] Script de deploy
-- [ ] README completo (arquitetura, como rodar, custo, lista de moedas, atribuição)
+- [x] Logs em JSON no stdout, com rotação pelo Docker, e reinício automático (`restart: unless-stopped`) — código pronto
+- [x] Endpoint `/health` — código pronto
+- [ ] Alarmes de CPU e status check (CloudWatch, a configurar na EC2)
+- [ ] Revisão de permissões da IAM Role (política mínima do Bedrock fica para quando o Bedrock voltar)
+- [ ] Atualização do SO e acesso SSH restrito (ou Session Manager, sem porta 22)
+- [~] Script de deploy: os passos estão no README; script ainda não criado
+- [x] README completo (arquitetura, como rodar, configuração, deploy, observabilidade, limitações, atribuição)
 - [ ] Vídeo ou prints do dashboard
-- [ ] Seção "Decisões e trade-offs"
+- [x] Seção "Decisões e trade-offs" no README
+
+**Hardening aplicado no código:** portas 8080 e 11434 só locais; Ollama sem porta publicada; ambiente de produção; `UseHttpsRedirection` removido (quebraria o acesso HTTP atrás do Nginx); encaminhamento de cabeçalhos do proxy habilitado; configuração do Bedrock removida do deploy.
 
 ---
 
