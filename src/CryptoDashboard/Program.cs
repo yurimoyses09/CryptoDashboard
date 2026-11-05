@@ -27,8 +27,8 @@ if (!app.Environment.IsDevelopment())
 
 app.UseStatusCodePagesWithReExecute("/not-found", createScopeForStatusCodePages: true);
 
-// Sem UseHttpsRedirection: o TLS termina no Nginx. Atrás de um proxy HTTP, o redirecionamento
-// mandaria todo acesso para https://, que o app não serve. O redirect fica no Nginx (ver deploy/).
+// Sem UseHttpsRedirection: se houver TLS na frente, o proxy reverso faz o redirecionamento.
+// Atrás de um proxy HTTP, o redirect do app mandaria todo acesso para https://, que o app não serve.
 
 app.UseAntiforgery();
 

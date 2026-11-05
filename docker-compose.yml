@@ -1,12 +1,12 @@
 services:
   app:
     build: .
-    # Só o próprio servidor acessa a porta. O acesso público passa pelo Nginx (deploy/nginx/).
+    # Porta só local. Se houver um proxy reverso na frente, ele é quem expõe o app.
     ports:
       - "127.0.0.1:8080:8080"
     environment:
       - ASPNETCORE_ENVIRONMENT=Production
-      # Confia em X-Forwarded-For e X-Forwarded-Proto enviados pelo Nginx
+      # Confia em X-Forwarded-For e X-Forwarded-Proto enviados por um proxy reverso
       - ASPNETCORE_FORWARDEDHEADERS_ENABLED=true
       - "ConnectionStrings__Default=Data Source=/data/crypto.db"
       - Sentiment__Provider=Ollama

@@ -23,8 +23,7 @@ flowchart LR
     O -->|JSON: sentimento, score, moedas, temas| S
     S --> DB
     DB --> UI[Dashboard Blazor]
-    NG[Nginx :80] --> UI
-    U[Navegador] --> NG
+    U[Navegador] --> UI
 ```
 
 Dois workers em background rodam dentro do mesmo app:
@@ -37,9 +36,8 @@ Dois workers em background rodam dentro do mesmo app:
 - Entity Framework Core com SQLite (modo WAL)
 - Ollama para classificação de sentimento, rodando em CPU
 - Docker e Docker Compose
-- Nginx como reverse proxy, em uma EC2 da AWS
 
-## Como rodar localmente
+## Como rodar
 
 Pré-requisito: Docker com Docker Compose.
 
@@ -53,6 +51,10 @@ Abra http://localhost:8080.
 
 O modelo precisa ser baixado uma vez. Sem ele, as notícias ficam sem sentimento e os logs mostram o erro 404 do Ollama.
 
+Os containers voltam sozinhos após reinício, pela opção `restart: unless-stopped`, desde que o serviço do Docker esteja habilitado para iniciar com o sistema.
+
+Para atualizar: `git pull && docker compose up -d --build`.
+
 ## Configuração
 
 | Variável (`.env`) | Padrão | Descrição |
@@ -62,29 +64,11 @@ O modelo precisa ser baixado uma vez. Sem ele, as notícias ficam sem sentimento
 
 As moedas acompanhadas ficam em `src/CryptoDashboard/appsettings.json`, na chave `Coins`. Os IDs seguem o CoinGecko. A chave `NewsTags` mapeia a moeda para a tag do Cointelegraph, quando o nome for diferente.
 
-## Deploy na AWS
-
-O deploy usa uma EC2 com Docker, Nginx na frente e um Elastic IP. Os arquivos de apoio estão em `deploy/`:
-
-- `deploy/nginx/cryptodashboard.conf`: configuração do Nginx, com suporte a WebSocket, que o Blazor Server precisa.
-
-Resumo dos passos:
-1. Instância EC2 com Amazon Linux 2023 (t3.large se for usar o Ollama).
-2. Security Group com as portas 80 e 443 abertas e a 22 restrita ao seu IP. As portas 8080 e 11434 não são expostas.
-3. Docker e Docker Compose instalados, e o repositório clonado em `/opt/cryptodashboard`.
-4. `.env` criado no servidor, com o modelo do Ollama.
-5. `docker compose up -d --build`, depois o `ollama pull`.
-6. Nginx com o arquivo de `deploy/nginx/`.
-
-Os containers reiniciam sozinhos após reinício da máquina, pela opção `restart: unless-stopped`, desde que o Docker esteja habilitado no boot.
-
-Atualização: `git pull && docker compose up -d --build`.
-
 ## Observabilidade
 
 - **Logs estruturados:** o app grava logs em JSON no stdout. Eles aparecem com `docker compose logs -f app`.
 - **Rotação:** o Docker guarda no máximo 5 arquivos de 10 MB para o app, e 3 para o Ollama. Os logs não enchem o disco.
-- **Health check:** `GET /health` responde `200 OK` quando o app está no ar. Pode ser usado por monitoramento externo.
+- **Health check:** `GET /health` responde `200 OK` quando o app está no ar.
 - **Ciclos:** cada ciclo de coleta e de classificação registra quantos itens foram processados. O resumo de 24h é registrado a cada ciclo de classificação.
 
 ## Decisões e trade-offs
@@ -92,14 +76,11 @@ Atualização: `git pull && docker compose up -d --build`.
 **Por que Blazor Server e não uma SPA com API separada?**
 Tudo fica em C#, com um único projeto e sem camada de API para manter. A contrapartida é que cada usuário mantém uma conexão ativa com o servidor, o que dificulta escalar para várias instâncias. Para um dashboard de uso pessoal, o custo é aceitável.
 
-**Por que EC2 e não Lambda?**
-Lambda não combina com o modelo do projeto. Os workers precisam rodar continuamente, o banco é um arquivo SQLite em disco, e o Ollama precisa de memória e CPU por bastante tempo. Usar Lambda exigiria trocar o banco por um serviço gerenciado e substituir os workers por agendamentos. Fica como possível evolução, para estudo.
-
 **Por que SQLite e não PostgreSQL?**
 O volume é pequeno, e um arquivo único com volume Docker simplifica o deploy e o backup. A contrapartida é que ele não suporta várias instâncias gravando ao mesmo tempo, e não ordena `DateTimeOffset` diretamente. Por isso o código ordena pelo `Id` e filtra datas em memória.
 
 **Por que Ollama e não um modelo na nuvem?**
-Custo zero por chamada e os dados não saem da máquina. A contrapartida é a velocidade: em CPU, cada classificação leva segundos ou minutos, e o modelo local erra mais que um modelo grande. Por isso a classificação roda em lotes a cada 30 minutos, e não em tempo real. O código tem a interface `ILlmClient`, e o Bedrock foi implementado como alternativa, mas não está ativo na configuração de deploy.
+Custo zero por chamada e os dados não saem da máquina. A contrapartida é a velocidade: em CPU, cada classificação leva segundos ou minutos, e o modelo local erra mais que um modelo grande. Por isso a classificação roda em lotes a cada 30 minutos, e não em tempo real. A interface `ILlmClient` isola o provedor, então trocar de modelo exige só uma nova implementação.
 
 **Por que coletar em lote e não por moeda?**
 A CoinGecko permite pedir preços de várias moedas numa só chamada. Isso mantém o consumo baixo e evita limites de taxa, mesmo na API gratuita.
@@ -116,8 +97,8 @@ O SQLite compara `DateTimeOffset` como texto, e offsets diferentes quebram a com
 **Por que não há autenticação?**
 O dashboard é somente leitura. O botão "Atualizar" só recarrega dados. Como não há ações de escrita, o risco é a exposição pública dos dados coletados, que são públicos. Se o projeto ganhar ações, autenticação passa a ser obrigatória.
 
-**Por que não há HTTPS ainda?**
-Depende de um domínio apontando para o Elastic IP. Sem domínio, o acesso é por HTTP. Com o Certbot, o Nginx passa a servir HTTPS e faz o redirecionamento. O app não redireciona HTTP por conta própria, porque atrás de um proxy isso quebraria o acesso.
+**Por que não há HTTPS?**
+Sem domínio e certificado, o acesso é por HTTP. O app não redireciona HTTP para HTTPS por conta própria, porque, atrás de um proxy HTTP, isso mandaria todos os acessos para um endereço que não responde. Se houver TLS na frente, o proxy faz o redirecionamento, e o app lê os cabeçalhos `X-Forwarded-*` enviados por ele.
 
 ## Limitações
 
