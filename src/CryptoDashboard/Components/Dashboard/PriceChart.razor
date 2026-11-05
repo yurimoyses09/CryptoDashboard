@@ -1,0 +1,99 @@
+@using System.Globalization
+
+@if (_series.Count == 0)
+{
+    <p class="text-muted mb-0">Histórico insuficiente para o período. Aguarde as próximas coletas.</p>
+}
+else
+{
+    <svg viewBox="0 0 @Width @Height" class="w-100" role="img" aria-label="Variação percentual de preço no período">
+        <line class="chart-zero" x1="@Pad" x2="@(Width - Pad)" y1="@F(_zeroY)" y2="@F(_zeroY)" />
+        <text class="chart-label" x="4" y="@(Pad + 4)">@F(_max)%</text>
+        <text class="chart-label" x="4" y="@(Height - Pad)">@F(_min)%</text>
+        @foreach (var s in _series)
+        {
+            <polyline fill="none" stroke="@s.Color" stroke-width="2" points="@s.Points" />
+        }
+    </svg>
+
+    <div class="d-flex flex-wrap gap-3 small mt-2">
+        @foreach (var s in _series)
+        {
+            <span>
+                <span class="legend-dot" style="background:@s.Color"></span>
+                @s.CoinId.ToUpperInvariant() @s.Last.ToString("+0.00;-0.00", CultureInfo.InvariantCulture)%
+            </span>
+        }
+    </div>
+}
+
+@code {
+    [Parameter] public IReadOnlyList<PricePointDto> Points { get; set; } = [];
+    [Parameter] public IReadOnlyList<string> CoinIds { get; set; } = [];
+
+    private const int Width = 800;
+    private const int Height = 300;
+    private const int Pad = 30;
+
+    private static readonly string[] Palette =
+        ["#1b6ec2", "#e8590c", "#2b8a3e", "#9c36b5", "#c92a2a", "#0c8599", "#f08c00", "#495057", "#d6336c", "#5f3dc4"];
+
+    private List<Series> _series = [];
+    private double _min;
+    private double _max;
+    private double _zeroY;
+    private DateTimeOffset _start;
+    private double _spanSeconds = 1;
+
+    private sealed record Series(string CoinId, string Color, string Points, double Last);
+
+    protected override void OnParametersSet() => Build();
+
+    private void Build()
+    {
+        _series = [];
+
+        var inScope = Points.Where(p => CoinIds.Contains(p.CoinId)).ToList();
+        if (inScope.Count < 2) return;
+
+        _start = inScope.Min(p => p.At);
+        var end = inScope.Max(p => p.At);
+        _spanSeconds = Math.Max(1, (end - _start).TotalSeconds);
+
+        // Variação % desde o primeiro ponto de cada moeda no período
+        var rows = new List<(string CoinId, int Index, DateTimeOffset At, double Pct)>();
+        for (var i = 0; i < CoinIds.Count; i++)
+        {
+            var coin = CoinIds[i];
+            var list = inScope.Where(p => p.CoinId == coin).OrderBy(p => p.At).ToList();
+            if (list.Count < 2) continue;
+
+            var basePrice = (double)list[0].Price;
+            if (basePrice <= 0) continue;
+
+            foreach (var p in list)
+                rows.Add((coin, i, p.At, ((double)p.Price / basePrice - 1) * 100));
+        }
+
+        if (rows.Count == 0) return;
+
+        _min = Math.Min(0, rows.Min(r => r.Pct));
+        _max = Math.Max(0, rows.Max(r => r.Pct));
+        if (_max - _min < 0.01) _max = _min + 0.01; // evita divisão por zero quando não há variação
+        _zeroY = Y(0);
+
+        foreach (var group in rows.GroupBy(r => r.CoinId))
+        {
+            var ordered = group.OrderBy(r => r.At).ToList();
+            var points = string.Join(" ", ordered.Select(r => F(X(r.At)) + "," + F(Y(r.Pct))));
+            var color = Palette[ordered[0].Index % Palette.Length];
+            _series.Add(new Series(group.Key, color, points, ordered[^1].Pct));
+        }
+    }
+
+    private double X(DateTimeOffset at) => Pad + (at - _start).TotalSeconds / _spanSeconds * (Width - 2 * Pad);
+
+    private double Y(double pct) => Pad + (_max - pct) / (_max - _min) * (Height - 2 * Pad);
+
+    private static string F(double value) => value.ToString("0.0", CultureInfo.InvariantCulture);
+}

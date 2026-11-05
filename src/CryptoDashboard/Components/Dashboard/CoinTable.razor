@@ -1,0 +1,67 @@
+@using System.Globalization
+
+<div class="table-responsive mb-4">
+    <table class="table table-sm align-middle">
+        <thead>
+            <tr>
+                <th>Moeda</th>
+                <th class="text-end">Preço (USD)</th>
+                <th class="text-end">Var. 24h</th>
+                <th class="text-end">Capitalização</th>
+                <th>Sentimento 24h</th>
+                <th class="text-end">Notícias</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var r in Rows)
+            {
+                <tr>
+                    <td>
+                        <strong>@r.Symbol.ToUpperInvariant()</strong>
+                        <span class="text-muted small">@r.Name</span>
+                    </td>
+                    <td class="text-end">@FormatPrice(r.Price)</td>
+                    <td class="text-end @VariationClass(r.Variation24h)">@FormatPct(r.Variation24h)</td>
+                    <td class="text-end">@FormatMarketCap(r.MarketCap)</td>
+                    <td><SentimentBadge Label="@SentimentLabel.FromScore(r.AverageScore24h)" /></td>
+                    <td class="text-end">@r.NewsCount24h</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@code {
+    private static readonly CultureInfo Pt = CultureInfo.GetCultureInfo("pt-BR");
+
+    [Parameter] public IReadOnlyList<CoinRow> Rows { get; set; } = [];
+
+    private static string FormatPrice(decimal? value)
+    {
+        if (value is null) return "—";
+        // Moedas de centavos precisam de mais casas decimais
+        var format = value.Value >= 1m ? "N2" : "N6";
+        return value.Value.ToString(format, Pt);
+    }
+
+    private static string FormatPct(decimal? value)
+    {
+        if (value is null) return "—";
+        return value.Value.ToString("+0.00;-0.00", Pt) + "%";
+    }
+
+    private static string VariationClass(decimal? value)
+    {
+        if (value is null) return string.Empty;
+        return value.Value >= 0m ? "text-success" : "text-danger";
+    }
+
+    private static string FormatMarketCap(decimal? value)
+    {
+        if (value is null) return "—";
+        var v = value.Value;
+        if (v >= 1_000_000_000m) return "US$ " + (v / 1_000_000_000m).ToString("N2", Pt) + " bi";
+        if (v >= 1_000_000m) return "US$ " + (v / 1_000_000m).ToString("N2", Pt) + " mi";
+        return "US$ " + v.ToString("N0", Pt);
+    }
+}

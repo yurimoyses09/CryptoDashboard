@@ -1,6 +1,6 @@
 # Sprint: Dashboard de Criptomoedas — Acompanhamento de entregas
 
-**Atualizado em:** 01/11/2026
+**Atualizado em:** 03/11/2026
 **Stack atual:** .NET 10, ASP.NET Core + Blazor Server, `BackgroundService`, EF Core + SQLite, Docker
 **Legenda:** [x] concluído · [ ] pendente · [~] parcial
 
@@ -39,24 +39,26 @@
 
 ## Dia 3: Feature de IA (sentimento, moedas citadas e resumo)
 
-- [ ] `SentimentService` com a API Converse do Bedrock
-- [ ] Prompt com saída em JSON (sentimento, score, moedas citadas, temas)
-- [ ] Passar a lista de moedas válidas ao modelo
-- [ ] Tratar ambiguidade de símbolos (SOL, ADA)
-- [ ] Validar o JSON e registrar fallback
-- [ ] Classificar notícias pendentes em lotes pequenos
-- [ ] Resumo diário das moedas mais citadas
-- [ ] Limitar tokens de entrada e saída
-- [ ] Preencher `tb_news_coin` com as moedas citadas em cada notícia
+- [x] `SentimentService` com provedores Ollama (local) e Bedrock (Converse API), atrás de `ILlmClient`
+- [x] Prompt com saída em JSON (sentimento, score, moedas citadas, temas)
+- [x] Passar a lista de moedas válidas ao modelo
+- [~] Tratar ambiguidade de símbolos (SOL, ADA): regra no prompt, falta validar com notícias reais
+- [x] Validar o JSON e registrar fallback (resposta inválida fica pendente e é tentada no próximo ciclo)
+- [x] Classificar notícias pendentes em lotes pequenos (`BatchSize`, a cada 30 min)
+- [x] Resumo diário das moedas mais citadas (`DailySummaryService`, últimas 24h, registrado no log a cada ciclo; compilação pendente de validação local)
+- [~] Limitar tokens de entrada e saída: Bedrock com `MaxTokens 300`; Ollama sem limite de saída (`num_predict`)
+- [x] Preencher `NewsCoins` com as moedas citadas em cada notícia
+- [~] Amostra revisada à mão: modelo em `docs/revisao-sentimento.md`, aguardando preenchimento (meta: 15 notícias, 80% OK)
+- [ ] Validar o provedor Bedrock de ponta a ponta (bloqueado pela verificação da conta na AWS)
 
 ---
 
 ## Dia 4: Dashboard e deploy na EC2
 
-- [ ] Tabela de moedas (preço, variação 24h, capitalização, sentimento)
-- [ ] Seletor de moedas e gráfico comparativo
-- [ ] Lista de notícias com sentimento e filtro por moeda
-- [ ] Bloco com o resumo do dia
+- [x] Tabela de moedas (preço, variação 24h, capitalização, sentimento) — código pronto, validação visual pendente
+- [x] Seletor de moedas e gráfico comparativo (SVG, variação % desde o início do período, 24h e 7 dias) — código pronto, validação visual pendente
+- [x] Lista de notícias com sentimento e filtro por moeda — código pronto, validação visual pendente
+- [x] Bloco com o resumo do dia — código pronto, validação visual pendente
 - [ ] Subir instância EC2 com Amazon Linux 2023
 - [ ] Security Group, IAM Role e Elastic IP
 - [ ] Publicar o app (ou o container) e configurar `systemd` ou Docker com reinício automático
@@ -109,8 +111,11 @@
 
 1. Confirmar a chave de API do plano demo da CoinGecko e atualizar a configuração, se necessário.
 2. Confirmar os termos de uso da CoinGecko e do Cointelegraph e registrar a atribuição no README.
-3. Iniciar o Dia 3 com o `SentimentService`. Antes, configurar o acesso ao Bedrock e a role IAM.
-4. Monitorar nos logs se alguma outra tag de moeda retorna 404.
+3. Preencher a amostra de revisão em `docs/revisao-sentimento.md` (15 notícias) e validar a classificação.
+4. Validar a compilação e a execução do `DailySummaryService` localmente (`dotnet build`), pois o código foi escrito sem compilar.
+5. Configurar o acesso ao Bedrock e a role IAM após a verificação da conta na AWS.
+6. Revogar a chave de demo da CoinGecko que estava hardcoded no `DailySummaryService`. Ela continua no histórico do Git, então deve ser tratada como exposta.
+7. Monitorar nos logs se alguma outra tag de moeda retorna 404.
 
 ---
 

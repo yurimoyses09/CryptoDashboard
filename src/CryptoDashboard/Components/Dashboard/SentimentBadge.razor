@@ -1,0 +1,20 @@
+@if (Label is null)
+{
+    <span class="badge bg-light text-secondary border">Sem dados</span>
+}
+else if (Label == "positivo")
+{
+    <span class="badge bg-success">Positivo</span>
+}
+else if (Label == "negativo")
+{
+    <span class="badge bg-danger">Negativo</span>
+}
+else
+{
+    <span class="badge bg-info text-dark">Neutro</span>
+}
+
+@code {
+    [Parameter] public string? Label { get; set; }
+}

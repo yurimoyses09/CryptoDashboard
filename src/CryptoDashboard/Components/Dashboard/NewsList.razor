@@ -1,0 +1,56 @@
+<section class="card">
+    <div class="card-body">
+        <div class="d-flex justify-content-between align-items-center flex-wrap gap-2 mb-2">
+            <h2 class="h5 mb-0">Notícias</h2>
+            <select class="form-select form-select-sm w-auto" @onchange="OnChanged" aria-label="Filtrar por moeda">
+                <option value="" selected="@(SelectedCoin is null)">Todas as moedas</option>
+                @foreach (var c in Coins)
+                {
+                    <option value="@c.CoinId" selected="@(SelectedCoin == c.CoinId)">@c.Symbol.ToUpperInvariant()</option>
+                }
+            </select>
+        </div>
+
+        @if (News.Count == 0)
+        {
+            <p class="text-muted mb-0">Nenhuma notícia para este filtro ainda.</p>
+        }
+        else
+        {
+            <ul class="list-group list-group-flush">
+                @foreach (var n in News)
+                {
+                    <li class="list-group-item px-0">
+                        <div class="d-flex justify-content-between align-items-start gap-2">
+                            <a href="@n.Url" target="_blank" rel="noopener noreferrer">@n.Title</a>
+                            <SentimentBadge Label="@n.Sentiment" />
+                        </div>
+                        <div class="small text-muted">
+                            @n.Source · @n.PublishedAt.ToLocalTime().ToString("dd/MM HH:mm")
+                            @foreach (var coinId in n.Coins)
+                            {
+                                <span class="badge bg-light text-dark border ms-1">@SymbolOf(coinId)</span>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public IReadOnlyList<NewsRow> News { get; set; } = [];
+    [Parameter] public IReadOnlyList<CoinRow> Coins { get; set; } = [];
+    [Parameter] public string? SelectedCoin { get; set; }
+    [Parameter] public EventCallback<string?> OnFilterChanged { get; set; }
+
+    private async Task OnChanged(ChangeEventArgs e)
+    {
+        var value = e.Value?.ToString();
+        await OnFilterChanged.InvokeAsync(string.IsNullOrEmpty(value) ? null : value);
+    }
+
+    private string SymbolOf(string coinId) =>
+        Coins.FirstOrDefault(c => c.CoinId == coinId)?.Symbol.ToUpperInvariant() ?? coinId.ToUpperInvariant();
+}

@@ -1,0 +1,38 @@
+<section class="card mb-4">
+    <div class="card-body">
+        <h2 class="h5">Resumo das últimas 24h</h2>
+        <p class="small text-muted">Moedas mais citadas nas notícias já classificadas pela IA.</p>
+
+        @if (Items.Count == 0)
+        {
+            <p class="text-muted mb-0">Ainda não há notícias classificadas nas últimas 24h.</p>
+        }
+        else
+        {
+            <div class="row g-2">
+                @foreach (var item in Items)
+                {
+                    <div class="col-6 col-md-3">
+                        <div class="border rounded p-2 h-100">
+                            <div class="fw-bold">@SymbolOf(item.CoinId)</div>
+                            <div class="small text-muted">
+                                @item.NewsCount notícias · @item.Positive positivas · @item.Negative negativas
+                            </div>
+                            <div class="mt-1">
+                                <SentimentBadge Label="@SentimentLabel.FromScore(item.AverageScore)" />
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+</section>
+
+@code {
+    [Parameter] public IReadOnlyList<CoinDailySummary> Items { get; set; } = [];
+    [Parameter] public IReadOnlyList<CoinRow> Coins { get; set; } = [];
+
+    private string SymbolOf(string coinId) =>
+        Coins.FirstOrDefault(c => c.CoinId == coinId)?.Symbol.ToUpperInvariant() ?? coinId.ToUpperInvariant();
+}

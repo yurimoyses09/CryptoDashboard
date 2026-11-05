@@ -42,6 +42,7 @@ namespace CryptoDashboard.Services
                 try
                 {
                     await ClassifyPendingAsync(stoppingToken);
+                    await LogDailySummaryAsync(stoppingToken);
                 }
                 catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
                 {
@@ -53,6 +54,28 @@ namespace CryptoDashboard.Services
                 }
 
                 await Task.Delay(Interval, stoppingToken);
+            }
+        }
+
+        // Registra no log as moedas mais citadas nas últimas 24h. Serve de base para o bloco do dashboard (Dia 4).
+        private async Task LogDailySummaryAsync(CancellationToken ct)
+        {
+            using var scope = _scopeFactory.CreateScope();
+            var summary = scope.ServiceProvider.GetRequiredService<IDailySummaryService>();
+
+            var top = await summary.GetAsync(TimeSpan.FromHours(24), 10, ct);
+
+            if (top.Count == 0)
+            {
+                _logger.LogInformation("Resumo 24h: nenhuma notícia classificada no período");
+                return;
+            }
+
+            foreach (var c in top)
+            {
+                _logger.LogInformation(
+                    "Resumo 24h: {Moeda} com {Noticias} notícias (pos {Pos} / neu {Neu} / neg {Neg}), score médio {Score}",
+                    c.CoinId, c.NewsCount, c.Positive, c.Neutral, c.Negative, c.AverageScore);
             }
         }
 

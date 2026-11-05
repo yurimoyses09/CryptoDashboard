@@ -45,6 +45,7 @@ namespace CryptoDashboard.Services
             }
 
             services.AddScoped<ISentimentService, SentimentService>();
+            services.AddScoped<IDailySummaryService, DailySummaryService>();
             services.AddHostedService<SentimentWorker>();
 
             return services;
